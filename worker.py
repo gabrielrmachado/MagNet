@@ -35,6 +35,9 @@ class AEDetector:
         self.p = p
 
     def mark(self, X):
+        """
+        Computes the 'p' distance between original and reformed sample.
+        """
         diff = np.abs(X - self.model.predict(X))
         marks = np.mean(np.power(diff, self.p), axis=(1,2,3))
         return marks
@@ -312,42 +315,54 @@ class Evaluator:
         print("Drop Rate:", drop_rate)
         thrs = self.operator.get_thrs(drop_rate)
 
-        all_pass, _ = self.operator.filter(self.operator.data.test_data, thrs)
+        all_pass, collector = self.operator.filter(self.operator.data.test_data, thrs)
         all_on_acc, _, _, _ = self.get_normal_acc(all_pass)
 
         print("Classification accuracy with all defense on:", all_on_acc)
+        all_pass, detector_breakdown = self.operator.filter(self.untrusted_data.data, thrs)
+        both_acc, det_only_acc, ref_only_acc, none_acc = self.get_attack_acc(all_pass)
 
-        for confidence in confs:
-            f = get_attack_data_name(confidence)
-            self.load_data(AttackData(f, Y, "Carlini L2 " + str(confidence)))
+        print(len(self.untrusted_data.data))
+        print(len(all_pass))
+        print("Detector accuracy: {0}".format(1 - (len(all_pass) / len(self.untrusted_data.data))))
+        #print(detector_breakdown)
+        both.append(both_acc)
+        det_only.append(det_only_acc)
+        ref_only.append(ref_only_acc)
+        none.append(none_acc)
 
-            print("----------------------------------------------------------")
-            print("Confidence:", confidence)
-            all_pass, detector_breakdown = self.operator.filter(self.untrusted_data.data, thrs)
-            both_acc, det_only_acc, ref_only_acc, none_acc = self.get_attack_acc(all_pass)
-            print(detector_breakdown)
-            both.append(both_acc)
-            det_only.append(det_only_acc)
-            ref_only.append(ref_only_acc)
-            none.append(none_acc)
 
-        size = 2.5
-        plt.plot(confs, none, c="green", label="No fefense", marker="x", markersize=size)
-        plt.plot(confs, det_only, c="orange", label="With detector", marker="o", markersize=size)
-        plt.plot(confs, ref_only, c="blue", label="With reformer", marker="^", markersize=size)
-        plt.plot(confs, both, c="red", label="With detector & reformer", marker="s", markersize=size)
+        # for confidence in confs:
+        #     f = get_attack_data_name(confidence)
+        #     self.load_data(AttackData(f, Y, "Carlini L2 " + str(confidence)))
 
-        pylab.legend(loc='lower left', bbox_to_anchor=(0.02, 0.1), prop={'size':8})
-        plt.grid(linestyle='dotted')
-        plt.xlabel(r"Confidence in Carlini $L^2$ attack")
-        plt.ylabel("Classification accuracy")
-        plt.xlim(min(confs)-1.0, max(confs)+1.0)
-        plt.ylim(-0.05, 1.05)
-        ax.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
+        #     print("----------------------------------------------------------")
+        #     print("Confidence:", confidence)
+        #     all_pass, detector_breakdown = self.operator.filter(self.untrusted_data.data, thrs)
+        #     both_acc, det_only_acc, ref_only_acc, none_acc = self.get_attack_acc(all_pass)
+        #     print(detector_breakdown)
+        #     both.append(both_acc)
+        #     det_only.append(det_only_acc)
+        #     ref_only.append(ref_only_acc)
+        #     none.append(none_acc)
 
-        save_path = os.path.join(self.graph_dir, graph_name+".pdf")
-        plt.savefig(save_path)
-        plt.clf()
+        # size = 2.5
+        # plt.plot(confs, none, c="green", label="No defense", marker="x", markersize=size)
+        # plt.plot(confs, det_only, c="orange", label="With detector", marker="o", markersize=size)
+        # plt.plot(confs, ref_only, c="blue", label="With reformer", marker="^", markersize=size)
+        # plt.plot(confs, both, c="red", label="With detector & reformer", marker="s", markersize=size)
+
+        # pylab.legend(loc='lower left', bbox_to_anchor=(0.02, 0.1), prop={'size':8})
+        # plt.grid(linestyle='dotted')
+        # plt.xlabel(r"Confidence in Carlini $L^2$ attack")
+        # plt.ylabel("Classification accuracy")
+        # plt.xlim(min(confs)-1.0, max(confs)+1.0)
+        # plt.ylim(-0.05, 1.05)
+        # ax.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
+
+        # save_path = os.path.join(self.graph_dir, graph_name+".pdf")
+        # plt.savefig(save_path)
+        # plt.clf()
 
     def print(self):
         return " ".join([self.operator.print(), self.untrusted_data.print()])

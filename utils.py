@@ -18,6 +18,7 @@ def prepare_data(dataset, idx):
     idx: Index of test examples that we care about.
     return: X, targets, Y
     """
+
     return dataset.test_data[idx], dataset.test_labels[idx], np.argmax(dataset.test_labels[idx], axis=1)
 
 
