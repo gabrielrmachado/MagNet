@@ -28,16 +28,15 @@ operator = Operator(dataset, classifier, detector_dict, reformer)
 
 idx = utils.load_obj("example_idx")
 _, _, Y = prepare_data(MNIST(), idx[:2000])
-f = "mnist_test_set_deepfool.pkl"
 
+# f = "mnist_test_set_deepfool.pkl"
+f = "example_carlini_10.0.pkl"
 # Y = np.argmax(dataset.test_labels[:2000], axis=1)
-# f = "mnist_test_set_deepfool"
 
 testAttack = AttackData(f, Y)
 testAttack.data = testAttack.data[:2000]
 
-
 evaluator = Evaluator(operator, testAttack)
 evaluator.plot_various_confidences("defense_performance",
-                                   drop_rate={"I": 0.001, "II": 0.001})
+                                   drop_rate={"I": 0.01, "II": 0.01})
 

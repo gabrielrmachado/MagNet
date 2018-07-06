@@ -318,19 +318,20 @@ class Evaluator:
         all_pass, collector = self.operator.filter(self.operator.data.test_data, thrs)
         all_on_acc, _, _, _ = self.get_normal_acc(all_pass)
 
-        print("Classification accuracy with all defense on:", all_on_acc)
+        # print("Classification accuracy with all defense on:", all_on_acc)
         all_pass, detector_breakdown = self.operator.filter(self.untrusted_data.data, thrs)
         both_acc, det_only_acc, ref_only_acc, none_acc = self.get_attack_acc(all_pass)
 
         print(len(self.untrusted_data.data))
         print(len(all_pass))
-        print("Detector accuracy: {0}".format(1 - (len(all_pass) / len(self.untrusted_data.data))))
+        print(detector_breakdown)
+        print("Detector accuracy I: {0:.2%}".format(1 - (detector_breakdown["I"] / len(self.untrusted_data.data))))
+        print("Detector accuracy II: {0:.2%}".format(1 - (detector_breakdown["II"] / len(self.untrusted_data.data))))
         #print(detector_breakdown)
         both.append(both_acc)
         det_only.append(det_only_acc)
         ref_only.append(ref_only_acc)
         none.append(none_acc)
-
 
         # for confidence in confs:
         #     f = get_attack_data_name(confidence)
